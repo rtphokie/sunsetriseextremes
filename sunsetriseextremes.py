@@ -43,7 +43,7 @@ def threaded(f, daemon=False):
 utcnow = datetime.datetime.utcnow()
 
 
-def sunsuperlatives(lat, lng, timezone_name, year=None):
+def sunsetriseextremes(lat, lng, timezone_name, year=None):
     foo = _sunsuperlatives(round(lat, 2), round(lng, 2), timezone_name, year)
     return foo
 
@@ -104,5 +104,5 @@ def _sunsuperlatives(lat, lng, timezone_name, year):
     return result
 
 if __name__ == '__main__':
-    foo = sunsuperlatives(35.7796, -78.6382, 'US/Eastern')
+    foo = sunsetriseextremes(35.7796, -78.6382, 'US/Eastern')
     pprint(foo)

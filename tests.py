@@ -1,6 +1,6 @@
 import unittest
 import datetime
-from sunsuperlatives import sunsuperlatives, equinoxen
+from sunsetriseextremes import sunsetriseextremes, equinoxen
 from skyfield import api, almanac
 import pytz
 import os
@@ -27,7 +27,7 @@ class MyTestCase(unittest.TestCase):
             pass
 
     def test_sunriseset_extremes(self):
-        foo = sunsuperlatives(35.78, -78.64, "US/Eastern")
+        foo = sunsetriseextremes(35.78, -78.64, "US/Eastern")
         self.assertEqual('12 05', foo['set']['min'].strftime('%m %d'))
         self.assertEqual('06 28', foo['set']['max'].strftime('%m %d'))
         self.assertEqual('10 31', foo['rise']['max'].strftime('%m %d'))
@@ -36,7 +36,7 @@ class MyTestCase(unittest.TestCase):
     def test_longest_shortest_days(self):
         year=2020
         timezone_name="US/Eastern"
-        foo = sunsuperlatives(35.7796, -78.6382, timezone_name, year=year)
+        foo = sunsetriseextremes(35.7796, -78.6382, timezone_name, year=year)
         season = get_seasons(timezone_name, year)
 
         # min/max daylight should fall on the solstices
@@ -47,7 +47,7 @@ class MyTestCase(unittest.TestCase):
     def test_equiluxes(self):
         year=2020
         timezone_name="US/Eastern"
-        foo = sunsuperlatives(35.7796, -78.6382, timezone_name, year=year)
+        foo = sunsetriseextremes(35.7796, -78.6382, timezone_name, year=year)
         season = get_seasons(timezone_name, year)
 
         # calculated equilux days should be within a few days of the equinox.
