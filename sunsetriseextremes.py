@@ -8,7 +8,7 @@ pd.set_option('display.max_columns', 999)
 import datetime
 import isodate
 from pytz import timezone
-import getopt
+import argparse
 
 ts = api.load.timescale(builtin=True)
 load = api.Loader('/var/data')
@@ -17,7 +17,7 @@ equinoxen = ['Vernal', 'Autumnal']
 utcnow = datetime.datetime.utcnow()
 
 
-@simple_cache.cache_it(filename=".sun_superlatives.cache", ttl=1200000)
+@simple_cache.cache_it(filename=".seasons.cache", ttl=1200000)
 def get_seasons(timezone_name, year):
     ts = api.load.timescale(builtin=True)
     load = api.Loader('/var/data')
@@ -38,7 +38,7 @@ def sunsetriseextremes(lat, lng, timezone_name, year=None):
     return foo
 
 
-# @simple_cache.cache_it(filename=".sun_superlatives.cache", ttl=1200000)
+@simple_cache.cache_it(filename=".sun_superlatives.cache", ttl=1200000)
 def _sunsuperlatives(lat, lng, timezone_name, year):
     eph = load('de430t.bsp')
     if year is None:
@@ -101,7 +101,7 @@ def _sunsuperlatives(lat, lng, timezone_name, year):
     return result
 
 if __name__ == '__main__':
-    city='Raleigh'
+
     tzname = 'US/Eastern'
     coords = (35.7796, -78.6382)
     foo = sunsetriseextremes(coords[0], coords[1], tzname)
