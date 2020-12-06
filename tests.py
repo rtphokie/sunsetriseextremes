@@ -1,6 +1,6 @@
 import unittest
 import datetime
-from sunsetriseextremes import sunsetriseextremes, equinoxen
+from sunsetriseextremes import sunsetriseextremes
 from skyfield import api, almanac
 import pytz
 import os
@@ -28,10 +28,17 @@ class MyTestCase(unittest.TestCase):
 
     def test_sunriseset_extremes(self):
         foo = sunsetriseextremes(35.78, -78.64, "US/Eastern")
-        self.assertEqual('12 05', foo['set']['min'].strftime('%m %d'))
-        self.assertEqual('06 28', foo['set']['max'].strftime('%m %d'))
-        self.assertEqual('10 31', foo['rise']['max'].strftime('%m %d'))
         self.assertEqual('06 12', foo['rise']['min'].strftime('%m %d'))
+        print(foo['rise']['min'])
+        self.assertEqual('AM', foo['rise']['min'].strftime('%p'))
+        self.assertEqual('10 31', foo['rise']['max'].strftime('%m %d'))
+        self.assertEqual('AM', foo['rise']['max'].strftime('%p'))
+
+        self.assertEqual('12 05', foo['set']['min'].strftime('%m %d'))
+        self.assertEqual('PM', foo['set']['min'].strftime('%p'))
+        self.assertEqual('06 28', foo['set']['max'].strftime('%m %d'))
+        self.assertEqual('PM', foo['set']['max'].strftime('%p'))
+
 
     def test_longest_shortest_days(self):
         year=2020

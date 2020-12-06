@@ -48,7 +48,7 @@ def sunsetriseextremes(lat, lng, timezone_name, year=None):
     return foo
 
 
-@simple_cache.cache_it(filename=".sun_superlatives.cache", ttl=1200000)
+# @simple_cache.cache_it(filename=".sun_superlatives.cache", ttl=1200000)
 def _sunsuperlatives(lat, lng, timezone_name, year):
     eph = load('de430t.bsp')
     if year is None:
@@ -97,12 +97,27 @@ def _sunsuperlatives(lat, lng, timezone_name, year):
     result['equilux'] = {}
     # There are 2 days with close to 12 hours of daylight, around the equinoxes
     for i, equaluxdata in df.nsmallest(2, 'deltafrom12hrst').reset_index().iterrows():
-        result['equilux'][equinoxen[i]]={'dt': isodate.parse_datetime(equaluxdata['deltafrom12hrsdt']).astimezone(localtz),
-                                  'value': equaluxdata['deltafrom12hrst'] / np.timedelta64(1, 's')
-                                  }
+        record = {'dt': isodate.parse_datetime(equaluxdata['deltafrom12hrsdt']).astimezone(localtz), 'value': equaluxdata['deltafrom12hrst'] / np.timedelta64(1, 's') }
+        if record['dt'].strftime('%m')=='03':
+            result['equilux']['Vernal'] = record
+        elif record['dt'].strftime('%m') == '09':
+            result['equilux']['Autumnal'] = record
+        else:
+            raise ValueError(f'calculated equalux {record["dt"]} outside of March or September')
+
     eph.close()
     return result
 
 if __name__ == '__main__':
-    foo = sunsetriseextremes(35.7796, -78.6382, 'US/Eastern')
+    city='Raleigh'
+    tzname = 'US/Eastern'
+    coords = (35.7796, -78.6382)
+    foo = sunsetriseextremes(coords[0], coords[1], tzname)
     pprint(foo)
+    print(f"Sun extremes for {city} {coords} in the {tzname} timezone")
+    for event in ['rise', 'set']:
+        print(f"Sun{event}")
+        print(foo[event]['min'])
+        print(f"  earliest {foo[event]['min'].strftime('%-I:%M:%S %p %Z')} on {foo[event]['min'].strftime('%b %d, %Y')}")
+        # print(f"  latest   {foo[event]['max'].strftime('%-I:%M:%S %p %Z')} on {foo[event]['min'].strftime('%b %d, %Y')}")
+        print()
