@@ -76,7 +76,7 @@ def _sunsuperlatives(lat, lng, timezone_name, year):
         else:
             #store the datetime of sunrise, sunset, time the Sun is above the horizon, and how close that is to 12 hours
             #avoid pandas conversion datetime64 and its timezone complexities with iso format
-            days.append({'risedt': dt.isoformat(), 'riset': risedt.astimezone(localtz).time(),
+            days.append({'risedt': risedt.isoformat(), 'riset': risedt.astimezone(localtz).time(),
                          'setdt': dt.isoformat(), 'sett': dt.astimezone(localtz).time(),
                          'deltadt': dt.isoformat(), 'deltat': dt-risedt, # time the Sun is above the horizon
                          'deltafrom12hrsdt': dt.isoformat(), 'deltafrom12hrst': abs(pd.Timedelta('12 hours')-(dt-risedt))})

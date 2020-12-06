@@ -18,6 +18,7 @@ def get_seasons(timezone_name, year):
     for yi, ti in zip(y, t):
         season[almanac.SEASON_EVENTS[yi]] = ti.utc_datetime().astimezone(localtz)
     return season
+
 class MyTestCase(unittest.TestCase):
     def setUp(self):
         # clear cache
@@ -29,7 +30,6 @@ class MyTestCase(unittest.TestCase):
     def test_sunriseset_extremes(self):
         foo = sunsetriseextremes(35.78, -78.64, "US/Eastern")
         self.assertEqual('06 12', foo['rise']['min'].strftime('%m %d'))
-        print(foo['rise']['min'])
         self.assertEqual('AM', foo['rise']['min'].strftime('%p'))
         self.assertEqual('10 31', foo['rise']['max'].strftime('%m %d'))
         self.assertEqual('AM', foo['rise']['max'].strftime('%p'))
