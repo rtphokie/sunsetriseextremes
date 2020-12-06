@@ -2,45 +2,35 @@ import unittest
 from pprint import pprint
 from skyfield import api, almanac
 import pandas as pd
-import threading
 import simple_cache
 import numpy as np
 pd.set_option('display.max_columns', 999)
-import warnings
 import datetime
 import isodate
 from pytz import timezone
+import getopt
 
 ts = api.load.timescale(builtin=True)
 load = api.Loader('/var/data')
 equinoxen = ['Vernal', 'Autumnal']
 
-
-def threaded(f, daemon=False):
-    import queue
-
-    def wrapped_f(q, *args, **kwargs):
-        '''this function calls the decorated function and puts the
-        result in a queue'''
-        ret = f(*args, **kwargs)
-        q.put(ret)
-
-    def wrap(*args, **kwargs):
-        '''this is the function returned from the decorator. It fires off
-        wrapped_f in a new thread and returns the thread object with
-        the result queue attached'''
-
-        q = queue.Queue()
-
-        t = threading.Thread(target=wrapped_f, args=(q,)+args, kwargs=kwargs)
-        t.daemon = daemon
-        t.start()
-        t.result_queue = q
-        return t
-
-    return wrap
-
 utcnow = datetime.datetime.utcnow()
+
+
+@simple_cache.cache_it(filename=".sun_superlatives.cache", ttl=1200000)
+def get_seasons(timezone_name, year):
+    ts = api.load.timescale(builtin=True)
+    load = api.Loader('/var/data')
+    eph = load('de430t.bsp')
+    localtz = timezone(timezone_name)
+    t0 = ts.utc(year)  # midnight Jan 1
+    t1 = ts.utc(year + 1)  # midnight Jan 1 following year
+    t, y = almanac.find_discrete(t0, t1, almanac.seasons(eph))
+    season = {}
+    for yi, ti in zip(y, t):
+        season[almanac.SEASON_EVENTS[yi]] = ti.utc_datetime().astimezone(localtz)
+    eph.close()
+    return season
 
 
 def sunsetriseextremes(lat, lng, timezone_name, year=None):
@@ -97,7 +87,9 @@ def _sunsuperlatives(lat, lng, timezone_name, year):
     result['equilux'] = {}
     # There are 2 days with close to 12 hours of daylight, around the equinoxes
     for i, equaluxdata in df.nsmallest(2, 'deltafrom12hrst').reset_index().iterrows():
-        record = {'dt': isodate.parse_datetime(equaluxdata['deltafrom12hrsdt']).astimezone(localtz), 'value': equaluxdata['deltafrom12hrst'] / np.timedelta64(1, 's') }
+        daylightlength=equaluxdata['deltat'] / np.timedelta64(1, 's')
+        record = {'dt': isodate.parse_datetime(equaluxdata['deltafrom12hrsdt']).astimezone(localtz),
+                  'value': datetime.timedelta(seconds=float(daylightlength))}
         if record['dt'].strftime('%m')=='03':
             result['equilux']['Vernal'] = record
         elif record['dt'].strftime('%m') == '09':
@@ -113,11 +105,22 @@ if __name__ == '__main__':
     tzname = 'US/Eastern'
     coords = (35.7796, -78.6382)
     foo = sunsetriseextremes(coords[0], coords[1], tzname)
-    pprint(foo)
-    print(f"Sun extremes for {city} {coords} in the {tzname} timezone")
+
+    print(f"Sun extremes for {city} {coords} in the {tzname} timezone\n")
     for event in ['rise', 'set']:
         print(f"Sun{event}")
-        print(foo[event]['min'])
         print(f"  earliest {foo[event]['min'].strftime('%-I:%M:%S %p %Z')} on {foo[event]['min'].strftime('%b %d, %Y')}")
-        # print(f"  latest   {foo[event]['max'].strftime('%-I:%M:%S %p %Z')} on {foo[event]['min'].strftime('%b %d, %Y')}")
+        print(f"  latest   {foo[event]['max'].strftime('%-I:%M:%S %p %Z')} on {foo[event]['min'].strftime('%b %d, %Y')}")
         print()
+    for event in ['min', 'max']:
+        td = foo['delta']['value'][event]
+        hours, minutes, seconds  = td.seconds // 3600, td.seconds % 3600 // 60, (td.seconds%3600)%60
+        print(f"{event}imum daylight {foo['delta'][event].strftime('%b %d, %Y')}, {hours} hours {minutes} minutes {seconds} seconds")
+    print()
+
+    for equilux, data in foo['equilux'].items():
+        td = foo['equilux'][equilux]['value']
+        hours, minutes, seconds  = td.seconds // 3600, td.seconds % 3600 // 60, (td.seconds%3600)%60
+        print(f"{equilux:8} equilux {foo['equilux'][equilux]['dt'].strftime('%b %d, %Y')}, {hours} hours {minutes} minutes {seconds} seconds")
+
+

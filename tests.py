@@ -1,23 +1,9 @@
 import unittest
 import datetime
-from sunsetriseextremes import sunsetriseextremes
-from skyfield import api, almanac
-import pytz
+from sunsetriseextremes import sunsetriseextremes, get_seasons
 import os
 
 
-def get_seasons(timezone_name, year):
-    ts = api.load.timescale(builtin=True)
-    load = api.Loader('/var/data')
-    eph = load('de430t.bsp')
-    localtz = pytz.timezone(timezone_name)
-    t0 = ts.utc(year)  # midnight Jan 1
-    t1 = ts.utc(year + 1)  # midnight Jan 1 following year
-    t, y = almanac.find_discrete(t0, t1, almanac.seasons(eph))
-    season = {}
-    for yi, ti in zip(y, t):
-        season[almanac.SEASON_EVENTS[yi]] = ti.utc_datetime().astimezone(localtz)
-    return season
 
 class MyTestCase(unittest.TestCase):
     def setUp(self):
@@ -58,7 +44,7 @@ class MyTestCase(unittest.TestCase):
         season = get_seasons(timezone_name, year)
 
         # calculated equilux days should be within a few days of the equinox.
-        for equinox in equinoxen:
+        for equinox in foo['equilux'].keys():
             self.assertTrue(season[f'{equinox} Equinox'] - datetime.timedelta(days=7) <=
                                 foo['equilux'][equinox]['dt'] <=
                                      season[f'{equinox} Equinox'] + datetime.timedelta(days=7))
