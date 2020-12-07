@@ -57,6 +57,7 @@ def _sunsuperlatives(lat, lng, timezone_name, year):
 
     # build list of 365 rises, sets and day length
     days=[]
+    risedt=None
     for ti, yi in zip(t, y):
         dt = ti.utc_datetime()
         ldt = dt.astimezone(localtz)
@@ -64,12 +65,13 @@ def _sunsuperlatives(lat, lng, timezone_name, year):
         if yi:
             risedt=dt
         else:
+            if risedt is not None:
             #store the datetime of sunrise, sunset, time the Sun is above the horizon, and how close that is to 12 hours
             #avoid pandas conversion datetime64 and its timezone complexities with iso format
-            days.append({'risedt': risedt.isoformat(), 'riset': risedt.astimezone(localtz).time(),
-                         'setdt': dt.isoformat(), 'sett': dt.astimezone(localtz).time(),
-                         'deltadt': dt.isoformat(), 'deltat': dt-risedt, # time the Sun is above the horizon
-                         'deltafrom12hrsdt': dt.isoformat(), 'deltafrom12hrst': abs(pd.Timedelta('12 hours')-(dt-risedt))})
+                days.append({'risedt': risedt.isoformat(), 'riset': risedt.astimezone(localtz).time(),
+                             'setdt': dt.isoformat(), 'sett': dt.astimezone(localtz).time(),
+                             'deltadt': dt.isoformat(), 'deltat': dt-risedt, # time the Sun is above the horizon
+                             'deltafrom12hrsdt': dt.isoformat(), 'deltafrom12hrst': abs(pd.Timedelta('12 hours')-(dt-risedt))})
 
     df = pd.DataFrame(days)
     for k in ['rise', 'set', 'delta']:
@@ -102,15 +104,16 @@ def _sunsuperlatives(lat, lng, timezone_name, year):
 
 if __name__ == '__main__':
 
-    tzname = 'US/Eastern'
-    coords = (35.7796, -78.6382)
+    tzname = 'US/Pacific'
+    city='Oxnard, CA'
+    coords = (34.2,-119.18)
     foo = sunsetriseextremes(coords[0], coords[1], tzname)
 
     print(f"Sun extremes for {city} {coords} in the {tzname} timezone\n")
     for event in ['rise', 'set']:
         print(f"Sun{event}")
-        print(f"  earliest {foo[event]['min'].strftime('%-I:%M:%S %p %Z')} on {foo[event]['min'].strftime('%b %d, %Y')}")
-        print(f"  latest   {foo[event]['max'].strftime('%-I:%M:%S %p %Z')} on {foo[event]['min'].strftime('%b %d, %Y')}")
+        print(f"  earliest {foo[event]['min'].strftime('%-I:%M:%S %p %Z')} on {foo[event]['min'].strftime('%b %-d, %Y')}")
+        print(f"  latest   {foo[event]['max'].strftime('%-I:%M:%S %p %Z')} on {foo[event]['min'].strftime('%b %-d, %Y')}")
         print()
     for event in ['min', 'max']:
         td = foo['delta']['value'][event]
